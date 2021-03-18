@@ -53,7 +53,12 @@ def srb2kart_browser():
 def updateServers():
     """"Update the allServerInfo list with data from all kart servers. List of kart servers retrieved from the default master server."""
     # first get a list of all servers from the master server
-    msData = requests.get("https://ms.kartkrew.org/ms/api/games/SRB2Kart/7/servers?v=2")
+    try:
+        print("Getting list of servers from https://ms.kartkrew.org/ms/api/games/SRB2Kart/7/servers?v=2")
+        msData = requests.get("https://ms.kartkrew.org/ms/api/games/SRB2Kart/7/servers?v=2")
+    except:
+        print("Could not get master server data. Not updating server information.")
+        return
     
     # format it and get list of servers with IP, port and contact info
     msDataServers = msData.text.split("\n")
@@ -146,11 +151,19 @@ def appendServerInfo(ip='10.0.0.26', port='5029'):
     if ip not in allServerFlags:
             print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Server WHOIS info not cached, requesting it"))
 
-            # DISABLE FIRST LINE WHILE DEBUGGING OR GET RATE LIMITED
-            serverWhois = requests.get('http://ipwhois.app/json/'+ip).json()
-            #serverWhois = {'country': None, 'country_code': None, 'country_flag': "https://srb2kart.aqua.fyi/images/picardybad.png"}
-            allServerFlags[ip] = [serverWhois['country'], serverWhois['country_code'], serverWhois['country_flag']] # TODO: could just pass the serverWhois block and use necessary info in the jinja template
-
+            # try receiving info about the server from ipwhois.app
+            try:
+                # DISABLE FIRST LINE WHILE DEBUGGING OR GET RATE LIMITED
+                serverWhois = requests.get('http://ipwhois.app/json/'+ip).json()
+                #serverWhois = {'country': None, 'country_code': None, 'country_flag': "https://srb2kart.aqua.fyi/images/picardybad.png"}
+                allServerFlags[ip] = [serverWhois['country'], serverWhois['country_code'], serverWhois['country_flag']] # TODO: could just pass the serverWhois block and use necessary info in the jinja template
+            
+            # if we can't reach them, fill the info with unknown stuff.
+            # TODO: add a mechanic to retry connection after some time.
+            except:
+                print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Could not get WHOIS info, using dummy thicc info"))
+                allServerFlags[ip] = ['Unknown', 'XX', 'https://srb2kart.aqua.fyi/images/picardybad.png']
+    
     # up the counter baybeee
     serverCounter += 1
 
