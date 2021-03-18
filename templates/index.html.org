@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="Unofficial server browser for SRB2Kart servers" name="description">
+    <meta content="SRB2Kart" name="author">
+    <title>SRB2Kart Server Browser</title>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SRB2Kart Server Browser">
+    <meta property="og:description" content="Unofficial server browser for SRB2Kart servers">
+    <meta property="og:image" content="https://media.discordapp.net/attachments/275416357053399040/514214373187649559/kartlogo-wallpaper1080p.png">
+    <meta property="og:image:width" content="1920">
+    <meta property="og:image:height" content="1080">
+    <meta property="og:image:alt" content="SRB2Kart">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:text:title" content="SRB2Kart Server Browser">
+    <meta name="twitter:image" content="https://media.discordapp.net/attachments/275416357053399040/514214373187649559/kartlogo-wallpaper1080p.png">
+    <meta name="twitter:image:alt" content="SRB2Kart">
+    <meta name="twitter:card" content="summary">
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/ico" href="kartlogo.ico">
+    <style>
+        body{
+            text-align: center;
+        }
+        table{
+            text-align: center;
+        }
+        .dropdown, .refresh, .order{
+            cursor: pointer;
+        }
+        .order{
+            font-size: 0.9375rem !important;
+        }
+        .extra{
+            width:100%;
+            color: #ccc
+        }
+        .extra div{
+            vertical-align: top;
+            display: inline-block;
+            height: 100%
+        }
+        a{
+            vertical-align: center;
+            color: inherit;
+        }
+        a:hover{
+            text-decoration: none;
+        }
+        td{
+            vertical-align: center;
+        }
+        .extra div div{
+            width: 50%;
+            padding: 0px 15px;
+        }
+        .extra div div table tr td p{
+            width: 100%;
+            text-align: left;
+            margin-bottom: 0px
+        }
+        .extra_tr, .extra_tr:hover{
+            background-color: #242424 !important;
+        }
+        .extra div div table tr:hover{
+            background-color: inherit !important; 
+        }
+        .extra div div table tr:nth-of-type(2n+1):hover{
+            background-color: #303030 !important; 
+        }
+        h2{
+            padding: 8px 0px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<div class="container">
+<h1 id="a"><br />Loading...</h1>
+<table class="table table-hover table-striped" id="table" style="display:none">
+    <tbody id="tbody">
+        <tr>
+            <th></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(0)'>IP Address<span class="material-icons order" id="order_0" style="display: none">arrow_drop_down</span></a></th>
+            <th></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(1)'>Name<span class="material-icons order" id="order_1" style="display: none">arrow_drop_down</span></a></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(2)'>Players<span class="material-icons order" id="order_2" style="display: none">arrow_drop_down</span></a></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(3)'>Gametype<span class="material-icons order" id="order_3" style="display: none">arrow_drop_down</span></a></th>
+            <!--<th>Ping</th>-->
+            <th>Refresh</th>
+        </tr>
+    </tbody>
+</table>
+<small id="footer" style="display: none; padding-bottom: 8px; color: #ccc">Created by raphaelgoulart, based on existing work by James R. and GoldenTails</small>
+</div>
+</body>
+<script>
+    var current_sort = 2; //0 = ip; 1 = name; 2 = players; 3 = gametype
+    var sort_ip = false;
+    var sort_name = false;
+    var sort_player = true;
+    var sort_gametype = false;
+
+    var sv_array = [];
+    $.ajax("ms.php").done(function(data){
+        var servers = data.split("\n");
+        var table = $("#tbody")
+        servers.forEach(function(element,index){
+            var server = element.split(" ")
+            if(server.length > 1){
+                var address = server[0]
+                if(server[1]!='5029') address = address + ":" + server[1]
+                sv_array[index] = server
+                var row = $("<tr>").addClass('server_tr').attr("id","row_" + index).attr('data-index',index)
+                var dropdown = $("<a>").attr('href','javascript:void(0)').append($("<span>").attr('id','drop_'+index).addClass(['material-icons','dropdown']).text('arrow_drop_down').attr('data-open','0').hide().click(function(){openExtraDetails(index)}))
+                var refresh = $("<a>").attr('href','javascript:void(0)').append($("<span>").addClass(['material-icons','refresh']).text('cached'))
+                row.append(
+                    $("<td>").append(dropdown),
+                    $("<td>").text(address),
+                    $("<td>").attr("id","flag_" + index),
+                    $("<td>").attr("id","name_" + index).text("Loading..."),
+                    $("<td>").attr("id","players_" + index).text("? / ?"),
+                    $("<td>").attr("id","gametype_" + index).text("Unknown"),
+                    //$("<td>").attr("id","ping_" + index).text("?"),
+                    $("<td>").click(function(){refreshServer(index)}).append(refresh)
+                )
+                table.append(row)
+                table.append($("<tr>").addClass('extra_tr').attr('id',"extratr_" + index).append($("<td>").attr('colspan',7).attr("id","extra_" + index).addClass('extra').hide()))
+                getServerInfo(index)
+                getServerFlag(index)
+            }
+        })
+        $("#a").hide(200)
+        $("#table").show(200)
+        $("#footer").show(200)
+    })
+
+function getServerInfo(index){
+    var server = sv_array[index]
+    $.get('api.php',{'ip':server[0],'port':server[1]}).done(function(data,status,xhr){
+        $("#name_"+index).html(data['servername'])
+        $("#players_"+index).text(data['players']['count'] + " / " + data['players']['max'])
+        $("#gametype_"+index).text(data['gametype'])
+        //$("#ping_"+index).text(data['ping'] + " ms")
+
+        var extra = $("<div>").css('width','100%')
+        $("#extra_"+index).append(extra)
+
+        var td1 = $("<div>")
+        var td2 = $("<div>")
+        td1.append($("<h2>").text("Server info"))
+        if(server[2]) td1.append($("<p>").append(
+            $("<b>").text("Contact: "),
+            $("<span>").text(decodeURIComponent(server[2]))
+        ))
+        if(data['dedicated']) td1.append($("<p>").text("Dedicated server"))
+        if(data['cheats']) td1.append($("<p>").text("Cheats are enabled"))
+        if(data['password-protected']) td1.append($("<p>").text("Is password protected"))
+        if(data['gametype']=="Race") td1.append($("<p>").append(
+            $("<b>").text("Kartspeed: "),
+            $("<span>").text(data['kartspeed'])
+        ))
+        td1.append($("<p>").append(
+            $("<b>").text("Map: "),
+            $("<span>").text(data['level']['title'] + " (" + data['level']['name'] + ")")
+        ))
+
+        var h_players = $("<h2>").text("Players")
+        data['mods'] ? td1.append(h_players) : td2.append(h_players)
+        if(data['players']['count']==0){
+            var p_noplayers = $("<p>").append($("<i>").text("No players are currently playing :("))
+            data['mods'] ? td1.append(p_noplayers) : td2.append(p_noplayers)
+        }else{
+            console.log(data['players']['list'])
+            data['players']['list'].sort(function(a,b){return Number(b['score']) - Number(a['score'])})
+            var p_table = $("<table>").addClass("table")
+            data['players']['list'].forEach(function(element,index){
+                var span = $("<span>")
+                if(element['team']=='Spectator') span.append($("<i>").text(element['name']))
+                else span.text(element['name'])
+                var p = $("<p>").append(span)
+                p.append($("<span>").css('float','right').html(element['score'] + '&ensp;'))
+                p_table.append($("<tr>").append($("<td>").append(p)))
+            })
+            data['mods'] ? td1.append(p_table) : td2.append(p_table)
+        }
+
+        if(data['mods']){
+            td2.append($("<h2>").html("Addons"))
+            td2.append($("<small>").html("<b>Count: </b>" + data['addons'].length))
+            var a_table = $("<table>").addClass("table").css('margin-top','15px')
+            var a_tbody = $("<tbody>")
+            data['addons'].forEach(function(element,index){
+                var p = $("<p>").css('width','100%').css('text-align','left').text(element['name'])
+                if(element['name'] != 'bonuschars.kart' && data['httpsource'] != "" && data['httpsource'] != "/"){
+                    if(data['httpsource'].slice(-1)!='/') data['httpsource'] = data['httpsource'] + '/'
+                    p.append($("<a>").attr('href',data['httpsource'] + element['name']).css('float','right').append(
+                        $("<span>").addClass('material-icons').text('save')
+                    ))
+                }
+                a_tbody.append($("<tr>").append($("<td>").append(p)))
+            })
+            td2.append(a_table.append(a_tbody))
+        }
+
+        extra.append(td1,td2)
+        $("#drop_"+index).show()
+        sortTable(current_sort,false)
+    }).fail(function(xhr,status,error){
+        console.log(xhr)
+        var name = $("#name_"+index).html('')
+        name.append($("<span>").addClass('material-icons').css('font-size','.9375rem').css('color','#ff3f3f').text('error'))
+        name.append($("<span>").html("&ensp;Unable to reach server"))
+    })
+}
+
+function openExtraDetails(index){
+    var dropdown = $("#drop_"+index)
+    if(dropdown.attr('data-open')=='0'){
+        dropdown.attr('data-open','1')
+        dropdown.text('arrow_drop_up')
+        $("#extra_"+index).show(200)
+    }else{
+        dropdown.text('arrow_drop_down')
+        dropdown.attr('data-open','0')
+        $("#extra_"+index).hide(200)
+    }
+}
+
+function refreshServer(index){
+    var dropdown = $("#drop_"+index)
+    dropdown.text('arrow_drop_down')
+    dropdown.attr('data-open','0')
+    dropdown.hide()
+    $("#extra_"+index).hide(200)
+    $("#name_"+index).text("Loading...")
+    $("#players_"+index).text("? / ?")
+    $("#gametype_"+index).text("Unknown")
+    //$("#ping_"+index).text("?")
+    $("#extra_"+index).html('')
+    getServerInfo(index)
+}
+
+// might be blocked by adblockers, but whatever
+function getServerFlag(index){
+    var ip = sv_array[index][0]
+    var flag = $("#flag_"+index)
+    $.getJSON('https://freegeoip.app/json/' + ip).done(function(data,status,xhr){
+        var flagchar = data['country_code'].toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0)+127397));
+        flag.attr('title',data['country_name']).text(flagchar)
+    }).fail(function(xhr,status,error){
+        $.getJSON('flag.php?ip=' + ip).done(function(data,status,xhr){ // now it isn't anymore :D but might reach ratelimit faster
+            var flagchar = data['country_code'].toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0)+127397));
+            flag.attr('title',data['country_name']).text(flagchar)
+        }).fail(function(xhr,status,error){
+            console.log(xhr)
+        })
+    })
+}
+
+function sortTable(column,change=true){ //0 = ip; 1 = name; 2 = players; 3 = gametype
+    current_sort = column
+    var server_array = $(".server_tr").toArray()
+    server_array.sort(function(a,b){
+        if(column == 0){
+            return sortIp(a.children[1].innerHTML,b.children[1].innerHTML)
+        }else if(column == 1){
+            var errorstr = 'error Unable to reach server'
+            var name_a = getColorlessName(a.children[3])
+            var name_b = getColorlessName(b.children[3])
+            if(name_a==errorstr&&name_b==errorstr) return 0
+            if(name_a==errorstr) return 1
+            if(name_b==errorstr) return -1
+            return name_a.localeCompare(name_b);
+        }else if(column == 2){
+            return sortPlayers(a.children[4].innerHTML,b.children[4].innerHTML)
+        }else if(column == 3){
+            return sortGametype(a.children[5].innerHTML,b.children[5].innerHTML)
+        }
+    })
+    if(column == 0){
+        if(change) sort_ip = !sort_ip;
+        sort_name = false;
+        sort_player = false;
+        sort_gametype = false;
+        if(!sort_ip) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_0").text(sort_ip ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }else if(column == 1){
+        sort_ip = false;
+        if(change) sort_name = !sort_name;
+        sort_player = false;
+        sort_gametype = false;
+        if(!sort_name) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_1").text(sort_name ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }else if(column == 2){
+        sort_ip = false;
+        sort_name = false;
+        if(change) sort_player = !sort_player;
+        sort_gametype = false;
+        if(!sort_player) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_2").text(sort_player ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }else if(column == 3){
+        sort_ip = false;
+        sort_name = false;
+        sort_player = false;
+        if(change) sort_gametype = !sort_gametype;
+        if(!sort_gametype) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_3").text(sort_gametype ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }
+    var table = $("#tbody")
+    for (var i = 0; i < server_array.length; i++){
+        var extra_index = Number($(server_array[i]).attr('data-index'))
+        table.append(server_array[i])
+        table.append($("#extratr_"+extra_index))
+    }
+}
+
+function getColorlessName(name_element){
+    var name = ""
+    $(name_element).children().each(function(index,value){
+        name += value.innerHTML
+    })
+    return name
+}
+
+function compare(a,b){
+    if (a < b) {
+        return -1;
+    }
+    if (a > b) {
+        return 1;
+    }
+    return 0;
+}
+
+function sortIp(a,b){
+    arr_a = a.split(':')[0].split('.')
+    arr_b = b.split(':')[0].split('.')
+    num_a = Number(arr_a[0])
+    num_b = Number(arr_b[0])
+    if(num_a == num_b){
+        num_a = Number(arr_a[1])
+        num_b = Number(arr_b[1])
+    }
+    if(num_a == num_b){
+        num_a = Number(arr_a[2])
+        num_b = Number(arr_b[2])
+    }
+    if(num_a == num_b){
+        num_a = Number(arr_a[3])
+        num_b = Number(arr_b[3])
+    }
+    if(num_a == num_b){
+        num_a = Number(a.split(':')[1])
+        num_b = Number(b.split(':')[1])
+    }
+    return compare(num_a,num_b)   
+}
+
+function sortPlayers(a,b){
+    if(a=='? / ?'&&b=='? / ?') return 0
+    if(a=='? / ?') return 1
+    if(b=='? / ?') return -1
+    num_a = Number(a.split('/')[0].trim())
+    num_b = Number(b.split('/')[0].trim())
+    if(num_a == num_b) return compare(Number(b.split('/')[1].trim()),Number(a.split('/')[1].trim()))
+    return compare(num_b,num_a)   
+}
+
+function gametypeToNumber(gt){
+    if(gt=="Race") return 1
+    if(gt=="Battle") return 2
+    return 3
+}
+
+function sortGametype(a,b){
+    a = gametypeToNumber(a)
+    b = gametypeToNumber(b)
+    return compare(a,b)   
+}
+
+
+</script>
+</html>

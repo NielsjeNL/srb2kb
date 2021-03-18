@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en_US">
+<head>
+    <meta charset="utf-8">
+    <meta content="Unofficial server browser for SRB2Kart servers" name="description">
+    <meta content="SRB2Kart" name="author">
+    <title>SRB2Kart Server Browser</title>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SRB2Kart Server Browser">
+    <meta property="og:description" content="Unofficial server browser for SRB2Kart servers">
+    <meta property="og:image" content="https://media.discordapp.net/attachments/275416357053399040/514214373187649559/kartlogo-wallpaper1080p.png">
+    <meta property="og:image:width" content="1920">
+    <meta property="og:image:height" content="1080">
+    <meta property="og:image:alt" content="SRB2Kart">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:text:title" content="SRB2Kart Server Browser">
+    <meta name="twitter:image" content="https://media.discordapp.net/attachments/275416357053399040/514214373187649559/kartlogo-wallpaper1080p.png">
+    <meta name="twitter:image:alt" content="SRB2Kart">
+    <meta name="twitter:card" content="summary">
+    <link href="{{ url_for('static', filename='stylesheets/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/ico" href="{{ url_for('static', filename='images/kartlogo.ico') }}">
+    <style>
+        body{
+            text-align: center;
+            font-display: Arial;
+        }
+        table{
+            text-align: center;
+        }
+        .dropdown, .refresh, .order{
+            cursor: pointer;
+        }
+        .order{
+            font-size: 0.9375rem !important;
+        }
+        .extra{
+            width:100%;
+            color: #ccc
+        }
+        .extra div{
+            vertical-align: top;
+            display: inline-block;
+            height: 100%
+        }
+        a{
+            vertical-align: center;
+            color: inherit;
+        }
+        a:hover{
+            text-decoration: none;
+        }
+        td{
+            vertical-align: center;
+        }
+        .extra div div{
+            width: 50%;
+            padding: 0px 15px;
+        }
+        .extra div div table tr td p{
+            width: 100%;
+            text-align: left;
+            margin-bottom: 0px
+        }
+        .extra_tr, .extra_tr:hover{
+            background-color: #242424 !important;
+        }
+        .extra div div table tr:hover{
+            background-color: inherit !important; 
+        }
+        .extra div div table tr:nth-of-type(2n+1):hover{
+            background-color: #303030 !important; 
+        }
+        h2{
+            padding: 8px 0px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+<!-- load external scripts-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- not used yet <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script> -->
+
+<div class="container">
+
+<!-- some random info -->
+<h2>SRB2Kart Server Browser</h2>
+<p>To refresh the servers, refresh the page.<br />Data is updated in 30 second intervals.</p>
+<p>Last updated on <b>{{curDateTime}}</b></p>
+<!-- the table containing all info>-->
+<table class="table table-hover table-striped" id="table">
+    <tbody id="tbody">
+        <tr>
+            <th></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(0)'>IP Address<span class="material-icons order" id="order_0" style="display: none">arrow_drop_down</span></a></th>
+            <th></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(1)'>Name<span class="material-icons order" id="order_1" style="display: none">arrow_drop_down</span></a></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(2)'>Players<span class="material-icons order" id="order_2" style="display: none">arrow_drop_down</span></a></th>
+            <th><a href="javascript:void(0)" onclick='sortTable(3)'>Gametype<span class="material-icons order" id="order_3" style="display: none">arrow_drop_down</span></a></th>
+            <!--<th>Refresh</th>-->
+        </tr>
+        {% for num, server in allServerInfo %}
+            <tr class="server_tr" id="row_{{num}}" data-index="{{num}}">
+                <td>
+                    <a onclick="openExtraDetails({{num}})">
+                        <span id="drop_{{num}}" class="material-icons dropdown" data-open="0" style>arrow_drop_down</span>
+                    </a>
+                </td>
+                <td>{{server['ip']}}:{{server['port']}}</td>
+                <td id="flag_{{num}}"><img src="{{allServerFlags[server['ip']][2]}}" alt="{{allServerFlags[server['ip']][0]}}" style="width: 24px; height: 18px;" /></td>
+                <td id="name_{{num}}">{{server['servername']|safe}}</td>
+                <td id="players_{{num}}">{{server['players']['count']}} / {{server['players']['max']}}</td>
+                <td id="gametype_{{num}}">{{server['gametype']}}</td>
+                <!--<td><a href="javascript:void(0)" style>
+                    <span class="material-icons refresh">cached</span>
+                </a></td>-->
+            </tr>
+
+            <tr class="extra_tr" id="extratr_{{num}}">
+                <td colspan="7" id="extra_{{num}}" class="extra" style="display: none;">
+                    <div style="width: 100%; display: flex;">
+                        <div>   <!-- server info -->
+                            <h2>Server info</h2>
+                            <p>
+                                {{'Dedicated server' if server['dedicated'] else 'Listen server'}}
+                            </p>
+                            <p>
+                                <b>Kartspeed: </b>
+                                <span>{{server['kartspeed']}}</span>
+                            </p>
+                            <p>
+                                <b>Map:</b>
+                                <span>{{server['level']['title']}}</span>
+                            </p>
+                            
+                            <h2>Players</h2>
+                            <table class="table">
+                                {% for player in server['players']['list'] %} <!-- fill Players table with player info. table will be empty with no players-->
+                                <tr><td>
+                                    <p>
+                                        <span><i>{{player['name']}}</i></span>
+                                        <span style="float: right;">{{player['score']}}</span>
+                                    </p>
+                                </td></tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+
+                        <div>   <!-- addon info -->
+                            <h2>Addons</h2>
+                            <small><b>Count: </b>{{server['addons']|length}}</small>
+                            <table class="table" style="margin-top: 15px;">
+                                <!-- for each addon -->
+                                {% for addon in server['addons'] %}
+                                    <tr><td>
+                                        <p style="width: 100%; text-align: left;">{{addon['name']}}
+                                            <a href="{{server['httpsource']}}{{addon['name']}}" style="float: right;"><span class="material-icons">save</span></a>
+                                        </p>
+                                    </td></tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<small id="footer" style="padding-bottom: 8px; color: #ccc">Created by raphaelgoulart, modified by Aqua. Based on existing work by James R. and GoldenTails. 
+<img src="{{ url_for('static', filename='images/picardy.png') }}" alt="very cool emoji" style="width: 26px; height: 18px;"></small>
+</div>
+</body>
+
+<!-- scripts the table utilizes -->
+<script>
+
+    var current_sort = 2; //0 = ip; 1 = name; 2 = players; 3 = gametype
+    var sort_ip = false;
+    var sort_name = false;
+    var sort_player = true;
+    var sort_gametype = false;
+
+    function sortTable(column,change=true){ //0 = ip; 1 = name; 2 = players; 3 = gametype
+    current_sort = column
+    var server_array = $(".server_tr").toArray()
+    server_array.sort(function(a,b){
+        if(column == 0){
+            return sortIp(a.children[1].innerHTML,b.children[1].innerHTML)
+        }else if(column == 1){
+            var errorstr = 'error Unable to reach server'
+            var name_a = getColorlessName(a.children[3])
+            var name_b = getColorlessName(b.children[3])
+            if(name_a==errorstr&&name_b==errorstr) return 0
+            if(name_a==errorstr) return 1
+            if(name_b==errorstr) return -1
+            return name_a.localeCompare(name_b);
+        }else if(column == 2){
+            return sortPlayers(a.children[4].innerHTML,b.children[4].innerHTML)
+        }else if(column == 3){
+            return sortGametype(a.children[5].innerHTML,b.children[5].innerHTML)
+        }
+    })
+    if(column == 0){
+        if(change) sort_ip = !sort_ip;
+        sort_name = false;
+        sort_player = false;
+        sort_gametype = false;
+        if(!sort_ip) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_0").text(sort_ip ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }else if(column == 1){
+        sort_ip = false;
+        if(change) sort_name = !sort_name;
+        sort_player = false;
+        sort_gametype = false;
+        if(!sort_name) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_1").text(sort_name ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }else if(column == 2){
+        sort_ip = false;
+        sort_name = false;
+        if(change) sort_player = !sort_player;
+        sort_gametype = false;
+        if(!sort_player) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_2").text(sort_player ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }else if(column == 3){
+        sort_ip = false;
+        sort_name = false;
+        sort_player = false;
+        if(change) sort_gametype = !sort_gametype;
+        if(!sort_gametype) server_array = server_array.reverse()
+        $(".order").hide()
+        $("#order_3").text(sort_gametype ? 'arrow_drop_up' : 'arrow_drop_down').show()
+    }
+    var table = $("#tbody")
+    for (var i = 0; i < server_array.length; i++){
+        var extra_index = Number($(server_array[i]).attr('data-index'))
+        table.append(server_array[i])
+        table.append($("#extratr_"+extra_index))
+    }
+}
+
+function getColorlessName(name_element){
+    var name = ""
+    $(name_element).children().each(function(index,value){
+        name += value.innerHTML
+    })
+    return name
+}
+
+function compare(a,b){
+    if (a < b) {
+        return -1;
+    }
+    if (a > b) {
+        return 1;
+    }
+    return 0;
+}
+
+function sortIp(a,b){
+    arr_a = a.split(':')[0].split('.')
+    arr_b = b.split(':')[0].split('.')
+    num_a = Number(arr_a[0])
+    num_b = Number(arr_b[0])
+    if(num_a == num_b){
+        num_a = Number(arr_a[1])
+        num_b = Number(arr_b[1])
+    }
+    if(num_a == num_b){
+        num_a = Number(arr_a[2])
+        num_b = Number(arr_b[2])
+    }
+    if(num_a == num_b){
+        num_a = Number(arr_a[3])
+        num_b = Number(arr_b[3])
+    }
+    if(num_a == num_b){
+        num_a = Number(a.split(':')[1])
+        num_b = Number(b.split(':')[1])
+    }
+    return compare(num_a,num_b)   
+}
+
+function sortPlayers(a,b){
+    if(a=='? / ?'&&b=='? / ?') return 0
+    if(a=='? / ?') return 1
+    if(b=='? / ?') return -1
+    num_a = Number(a.split('/')[0].trim())
+    num_b = Number(b.split('/')[0].trim())
+    if(num_a == num_b) return compare(Number(b.split('/')[1].trim()),Number(a.split('/')[1].trim()))
+    return compare(num_b,num_a)   
+}
+
+function gametypeToNumber(gt){
+    if(gt=="Race") return 1
+    if(gt=="Battle") return 2
+    return 3
+}
+
+function sortGametype(a,b){
+    a = gametypeToNumber(a)
+    b = gametypeToNumber(b)
+    return compare(a,b)   
+}
+
+function openExtraDetails(index){
+    var dropdown = $("#drop_"+index)
+    if(dropdown.attr('data-open')=='0'){
+        dropdown.attr('data-open','1')
+        dropdown.text('arrow_drop_up')
+        $("#extra_"+index).show(200)
+    }else{
+        dropdown.text('arrow_drop_down')
+        dropdown.attr('data-open','0')
+        $("#extra_"+index).hide(200)
+    }
+}
+
+</script>
+</html>
