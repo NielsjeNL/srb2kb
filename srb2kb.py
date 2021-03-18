@@ -169,4 +169,4 @@ atexit.register(lambda: scheduler.shutdown())
 updateServers()
 
 # start running the flask server
-app.run(host='0.0.0.0', port='28960')
+app.run(host='0.0.0.0')
