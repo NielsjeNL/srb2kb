@@ -6,6 +6,7 @@ import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 import concurrent.futures
 from datetime import datetime
+import argparse
 
 #### TODOS
 # TODO: when sorting by name, unreachable servers pop up first
@@ -18,6 +19,15 @@ from datetime import datetime
 # Ashnal - Today at 2:25 PM
 # maybe like a little filter box that filters the list by whther the server has an addon containing the string you type or not
 # FR: sort table by kartspeed/gamemode
+
+# parse commandline arguments
+if __name__ == "__main__":
+    # ARGUMENTS
+    # Use argparse to parse arguments
+    parser = argparse.ArgumentParser(prog="srb2kb", description="Unofficial SRB2Kart Server Browser")
+    parser.add_argument("-p", "--port", type=int, default="80", help="Port to serve webpages on (default: 80)")
+
+    parsedArgs = parser.parse_args()
 
 # variables
 app = Flask(__name__)
@@ -182,4 +192,4 @@ atexit.register(lambda: scheduler.shutdown())
 updateServers()
 
 # start running the flask server
-app.run(host='0.0.0.0')
+app.run(host='0.0.0.0', port=parsedArgs.port)
