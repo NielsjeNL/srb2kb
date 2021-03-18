@@ -9,6 +9,7 @@ from datetime import datetime
 
 #### TODOS
 # TODO: when sorting by name, unreachable servers pop up first
+# TODO: addon list is very long with 115 addon servers. should make it so the list is just as long as the players table and/or set a minimum height
 # TODO: some static links in index.html, should be changed to be something like url_for()
 
 #### FEATURE REQUESTS
@@ -168,4 +169,4 @@ atexit.register(lambda: scheduler.shutdown())
 updateServers()
 
 # start running the flask server
-app.run(host='0.0.0.0')
+app.run(host='0.0.0.0', port='28960')

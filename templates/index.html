@@ -138,7 +138,11 @@
                                 {% for player in server['players']['list'] %} <!-- fill Players table with player info. table will be empty with no players-->
                                 <tr><td>
                                     <p>
+                                    {% if player['team'] == 'Playing' %}
+                                        <span>{{player['name']}}</span>
+                                    {% else %}
                                         <span><i>{{player['name']}}</i></span>
+                                    {% endif %}
                                         <span style="float: right;">{{player['score']}}</span>
                                     </p>
                                 </td></tr>
