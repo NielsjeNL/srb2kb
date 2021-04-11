@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # Use argparse to parse arguments
     parser = argparse.ArgumentParser(prog="srb2kb", description="Unofficial SRB2Kart Server Browser")
     parser.add_argument("-p", "--port", type=int, default="80", help="Port to serve webpages on (default: 80)")
-    parser.add_argument("-v", "--verbose", type=bool, default=True, help="Show verbose output")
+    parser.add_argument("-v", "--verbose", type=bool, default=False, help="Show verbose output")
 
     parsedArgs = parser.parse_args()
 
