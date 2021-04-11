@@ -11,7 +11,6 @@ import argparse
 #### TODOS
 # TODO: when sorting by name, unreachable servers pop up first
 # TODO: addon list is very long with 115 addon servers. should make it so the list is just as long as the players table and/or set a minimum height
-# TODO: some static links in index.html, should be changed to be something like url_for()
 
 #### FEATURE REQUESTS
 # FR: sort by region. serverWhois has continent information, use that?
@@ -26,6 +25,7 @@ if __name__ == "__main__":
     # Use argparse to parse arguments
     parser = argparse.ArgumentParser(prog="srb2kb", description="Unofficial SRB2Kart Server Browser")
     parser.add_argument("-p", "--port", type=int, default="80", help="Port to serve webpages on (default: 80)")
+    parser.add_argument("-v", "--verbose", type=bool, default=True, help="Show verbose output")
 
     parsedArgs = parser.parse_args()
 
@@ -91,9 +91,9 @@ def updateServers():
 
     # extract ip's and ports
     for line in msDataServers:
-        # why?
+        # 0 length line is given as last line so need to catch it
         if len(line) == 0:
-            print("Reached end of MS server list or whatever.")
+            if parsedArgs.verbose: print("Reached end of MS server list or got an empty line.")
             break
 
         line = line.split(" ")
@@ -129,7 +129,7 @@ def appendServerInfo(ip='10.0.0.26', port='5029'):
         # hey hello what's up?
         serverInfo = srb2kpacket.SRB2K().Main(ip, int(port))
         
-        print(str("|{:<26}|{:<64}|").format(f" {ip}:{port}     ", f" OK: {serverInfo['players']['count']}/{serverInfo['players']['max']} on {serverInfo['level']['name']}"))
+        if parsedArgs.verbose: print(str("|{:<26}|{:<64}|").format(f" {ip}:{port}     ", f" OK: {serverInfo['players']['count']}/{serverInfo['players']['max']} on {serverInfo['level']['name']}"))
         
         # include IP and port in the info, or am i blind
         serverInfo['ip'] = ip
@@ -140,7 +140,7 @@ def appendServerInfo(ip='10.0.0.26', port='5029'):
 
     # XD
     except:
-        print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " NOT REACHABLE"))
+        if parsedArgs.verbose: print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " NOT REACHABLE"))
         
         serverInfo = {  
                     'servername': '<img src="https://srb2kart.aqua.fyi/images/picardydown.png" alt="Unreachable server" style="width: 24px; height: 18px;" /> Could not connect',
@@ -163,7 +163,7 @@ def appendServerInfo(ip='10.0.0.26', port='5029'):
     # if we have not WHOIS'd an IP before, get info
     # this does external calls to ipwhois.app. keep their rate limits in mind.
     if ip not in allServerFlags:
-            print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Server WHOIS info not cached, requesting it"))
+            if parsedArgs.verbose: print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Server WHOIS info not cached, requesting it"))
 
             # try receiving info about the server from ipwhois.app
             try:
@@ -175,7 +175,7 @@ def appendServerInfo(ip='10.0.0.26', port='5029'):
             # if we can't reach them, fill the info with unknown stuff.
             # TODO: add a mechanic to retry connection after some time.
             except:
-                print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Could not get WHOIS info, using dummy thicc info"))
+                if parsedArgs.verbose: print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Could not get WHOIS info, using dummy thicc info"))
                 allServerFlags[ip] = ['Unknown', 'XX', 'https://srb2kart.aqua.fyi/images/picardybad.png']
     
     # up the counter baybeee
@@ -192,8 +192,27 @@ scheduler.start()
 # BUG: this sometimes causes my terminal to become unresponsive when ctrl+c'ing. might be a bug with the treading done in updateServers()
 atexit.register(lambda: scheduler.shutdown())
 
+# show script info
+print(r"""
+  ____      ____       ____    ____      _  __     ____   
+ / __"| uU |  _"\ u U | __")u |___"\    |"|/ /  U | __")u 
+<\___ \/  \| |_) |/  \|  _ \/ U __) |   | ' /    \|  _ \/ 
+ u___) |   |  _ <     | |_) | \/ __/ \U/| . \\u   | |_) | 
+ |____/>>  |_| \_\    |____/  |_____|u  |_|\_\    |____/  
+  )(  (__) //   \\_  _|| \\_  <<  //  ,-,>> \\,-._|| \\_  
+ (__)     (__)  (__)(__) (__)(__)(__)  \.)   (_/(__) (__) 
+ 
+ ######
+ # Script created by AquaMonkey#1470 and goulart#3978
+ # https://github.com/NielsjeNL/SRB2KB
+ ######""")
+
+if parsedArgs.verbose == False:
+    print("NOTE: Verbose information disabled. Individual server checks won't be shown. Enable with -v as argument.\n")
+
 # update servers ourself for a first time so we can display at least SOMETHING
 updateServers()
 
 # start running the flask server
+# flask is being run as a development server like this. works fine for our purposes though
 app.run(host='0.0.0.0', port=parsedArgs.port)
