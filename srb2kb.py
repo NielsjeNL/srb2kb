@@ -38,7 +38,10 @@ curDateTime = ""
 serverCounter = 1
 
 # --- flask webapp ---
+# include some other routes to prevent link rot/be more flexible/insert dumb reason
 @app.route('/', methods=["GET"])
+@app.route('/browser/', methods=["GET"])
+@app.route('/browser/index.html', methods=["GET"])
 def srb2kart_browser():
 
     # make sure we have data
@@ -55,6 +58,7 @@ def srb2kart_browser():
                         'port': '5029'
                         }
         allServerInfo.append(serverInfo)
+    # TODO: also add allServerFlags info
     
     # serve the page
     return render_template('index.html', allServerInfo=enumerate(allServerInfo), allServerFlags=allServerFlags, curDateTime=curDateTime)
