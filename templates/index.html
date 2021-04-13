@@ -122,7 +122,10 @@
                         <div>   <!-- server info -->
                             <h2>Server info</h2>
                             <p>
-                                {{'Dedicated server' if server['dedicated'] else 'Listen server'}}
+                                <b>Server type:</b> {{'Dedicated' if server['dedicated'] else 'Listen'}} 
+                            </p>
+                            <p>
+                                <b>Contact:</b> {{server['contact'] if server['contact'] else 'No contact set'}}
                             </p>
                             <p>
                                 <b>Kartspeed: </b>

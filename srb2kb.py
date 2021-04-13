@@ -7,10 +7,12 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import concurrent.futures
 from datetime import datetime
 import argparse
+from urllib.parse import unquote
 
 #### TODOS
 # TODO: when sorting by name, unreachable servers pop up first
 # TODO: addon list is very long with 115 addon servers. should make it so the list is just as long as the players table and/or set a minimum height
+# TODO: still some static links to srb2kart.aqua.fyi. why did i remove this TODO it's literally still in this file
 
 #### FEATURE REQUESTS
 # FR: sort by region. serverWhois has continent information, use that?
@@ -97,15 +99,15 @@ def updateServers():
             break
 
         line = line.split(" ")
-        serversToCheck.append([line[0], line[1]])
+        serversToCheck.append([line[0], line[1], line[2]])
 
     # call threads to check servers
     print("Checking all servers...")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
 
-        for key, value in serversToCheck:
-            futures.append(executor.submit(appendServerInfo, ip=key, port=value))
+        for ip, port, contact in serversToCheck:
+            futures.append(executor.submit(appendServerInfo, ip, port, contact))
     print("Checks done.")
 
     # sort list on amount of players and amount of max players
@@ -117,7 +119,7 @@ def updateServers():
     # replace the old info with the new info
     allServerInfo = allServerInfoStore
 
-def appendServerInfo(ip='10.0.0.26', port='5029'):
+def appendServerInfo(ip='10.0.0.26', port='5029', contact=''):
     """This function retrieves server information and appends it to the allServerInfoStore list. It also retrieves geo IP information for the requested IP."""
     # first declare global variables
     global allServerInfoStore
@@ -134,6 +136,7 @@ def appendServerInfo(ip='10.0.0.26', port='5029'):
         # include IP and port in the info, or am i blind
         serverInfo['ip'] = ip
         serverInfo['port'] = port
+        serverInfo['contact'] = unquote(contact, encoding="utf-8")
 
         # add this server's info to the list
         allServerInfoStore.append(serverInfo)
