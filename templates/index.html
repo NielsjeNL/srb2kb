@@ -127,6 +127,11 @@
                             <p>
                                 <b>Contact:</b> {{server['contact'] if server['contact'] else 'No contact set'}}
                             </p>
+                            {% if server['motd'] %}
+                            <p>
+                                <b>MOTD:</b> <i>{{server['motd']}}</i>
+                            </p>
+                            {% endif %}
                             <p>
                                 <b>Kartspeed: </b>
                                 <span>{{server['kartspeed']}}</span>
@@ -302,8 +307,8 @@ function sortPlayers(a,b){
 
 function gametypeToNumber(gt){
     if(gt=="Race") return 1
-    if(gt=="Battle") return 2
-    return 3
+    if(gt=="Battle") return 3
+    return 2
 }
 
 function sortGametype(a,b){

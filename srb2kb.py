@@ -137,7 +137,12 @@ def appendServerInfo(ip='10.0.0.26', port='5029', contact=''):
         serverInfo['ip'] = ip
         serverInfo['port'] = port
         serverInfo['contact'] = unquote(contact, encoding="utf-8")
-
+        serverInfo['motd'] = False
+        # contact||motd splitting
+        contactAndMotd = serverInfo['contact'].split('||')
+        if len(contactAndMotd) > 1:
+            serverInfo['contact'] = contactAndMotd[0]
+            serverInfo['motd'] = contactAndMotd[1]
         # add this server's info to the list
         allServerInfoStore.append(serverInfo)
 
