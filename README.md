@@ -3,7 +3,7 @@ Server browser for SRB2Kart
 
 To run this, first install the required packages:
 ```Python
-pip install apscheduler flask
+pip install apscheduler flask us
 ```
 Then launch it:
 ```Python
