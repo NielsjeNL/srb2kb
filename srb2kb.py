@@ -69,6 +69,8 @@ def srb2kart_browser():
     return render_template('index.html', allServerInfo=enumerate(allServerInfo), allServerFlags=allServerFlags, curDateTime=curDateTime)
 
 @app.route('/addoncount', methods=["GET"])
+@app.route('/browser/addoncount', methods=["GET"])
+@app.route('/browser/addoncount.html', methods=["GET"])
 def srb2kart_addonCount():
     global allServerAddonsSorted
     return render_template('addoncount.html', allServerAddons=allServerAddonsSorted, curDateTime=curDateTime, serverCounter=serverCounter)
