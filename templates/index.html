@@ -97,6 +97,7 @@
             <th><a href="javascript:void(0)" onclick='sortTable(1)'>Name<span class="material-icons order" id="order_1" style="display: none">arrow_drop_down</span></a></th>
             <th><a href="javascript:void(0)" onclick='sortTable(2)'>Players<span class="material-icons order" id="order_2" style="display: none">arrow_drop_down</span></a></th>
             <th><a href="javascript:void(0)" onclick='sortTable(3)'>Gametype<span class="material-icons order" id="order_3" style="display: none">arrow_drop_down</span></a></th>
+            <th><a href="" onclick=''>Kartspeed<span class="material-icons order" id="order_4" style="display: none">arrow_drop_down</span></a></th>
             <!--<th>Refresh</th>-->
         </tr>
         {% for num, server in allServerInfo %}
@@ -107,10 +108,12 @@
                     </a>
                 </td>
                 <td>{{server['ip']}}:{{server['port']}}</td>
-                <td id="flag_{{num}}"><img src="{{allServerFlags[server['ip']][2]}}" alt="{{allServerFlags[server['ip']][0]}}" style="width: 24px; height: 18px;" /></td>
+                <td id="flag_{{num}}"><img src="{{allServerFlags[server['ip']][2]}}" alt="{{allServerFlags[server['ip']][0]}}" style="width: 24px; height: 18px;" />{{allServerFlags[server['ip']][3]}}</td>
+                <!--<td id="state_{{num}}"></td>-->
                 <td id="name_{{num}}">{{server['servername']|safe}}</td>
                 <td id="players_{{num}}">{{server['players']['count']}} / {{server['players']['max']}}</td>
                 <td id="gametype_{{num}}">{{server['gametype']}}</td>
+                <td id="kartspeed_{{num}}">{{server['kartspeed']}}</td>
                 <!--<td><a href="javascript:void(0)" style>
                     <span class="material-icons refresh">cached</span>
                 </a></td>-->
@@ -181,13 +184,14 @@
 <!-- scripts the table utilizes -->
 <script>
 
-    var current_sort = 2; //0 = ip; 1 = name; 2 = players; 3 = gametype
+    var current_sort = 2; //0 = ip; 1 = name; 2 = players; 3 = gametype; 4 = kartspeed
     var sort_ip = false;
     var sort_name = false;
     var sort_player = true;
     var sort_gametype = false;
+    var sort_kartspeed = false;
 
-    function sortTable(column,change=true){ //0 = ip; 1 = name; 2 = players; 3 = gametype
+    function sortTable(column,change=true){ //0 = ip; 1 = name; 2 = players; 3 = gametype; 4 = kartspeed
     current_sort = column
     var server_array = $(".server_tr").toArray()
     server_array.sort(function(a,b){

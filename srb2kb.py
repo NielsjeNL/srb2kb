@@ -8,6 +8,7 @@ import concurrent.futures
 from datetime import datetime
 import argparse
 from urllib.parse import unquote
+import us # this country dude
 
 #### TODOS
 # TODO: when sorting by name, unreachable servers pop up first
@@ -36,6 +37,8 @@ app = Flask(__name__)
 allServerInfo = []
 allServerInfoStore = []
 allServerFlags = {}
+allServerAddons = {}
+allServerAddonsSorted = {}
 curDateTime = ""
 serverCounter = 1
 
@@ -65,6 +68,11 @@ def srb2kart_browser():
     # serve the page
     return render_template('index.html', allServerInfo=enumerate(allServerInfo), allServerFlags=allServerFlags, curDateTime=curDateTime)
 
+@app.route('/addoncount', methods=["GET"])
+def srb2kart_addonCount():
+    global allServerAddonsSorted
+    return render_template('addoncount.html', allServerAddons=allServerAddonsSorted, curDateTime=curDateTime, serverCounter=serverCounter)
+
 # --- kart server related functions ---
 def updateServers():
     """"Update the allServerInfo list with data from all kart servers. List of kart servers retrieved from the default master server."""
@@ -82,10 +90,13 @@ def updateServers():
     # use global vars and clear them (to remove old entries)
     global allServerInfo
     global allServerInfoStore
+    global allServerAddons
+    global allServerAddonsSorted
     global curDateTime
     global serverCounter
 
     allServerInfoStore = []
+    allServerAddons = {}
     serverCounter = 1
 
     # create list of servers to check
@@ -112,7 +123,30 @@ def updateServers():
 
     # sort list on amount of players and amount of max players
     allServerInfoStore.sort(key=lambda x: (x['players']['count'],x['players']['max']), reverse=True)
+    # also sort addon counts
+    allServerAddons = sorted(allServerAddons.items(), key=lambda item: item[1], reverse=True)
+    # match addons to a type
+    allServerAddonsSorted = {
+        'Characters': {},
+        'Maps': {},
+        'Scripts': {},
+        'Misc': {}
+    }
 
+    for addon in allServerAddons:
+        #print(addon[0], addon[1])
+        addonSplit = addon[0].split("_")
+        #print(addonSplit)
+
+        # match prefixes
+        if addonSplit[0].upper() == 'KC' or addonSplit[0].upper() == 'KCL' or addonSplit[0].upper() == 'bonuschars.kart':
+            allServerAddonsSorted['Characters'][addon[0]] = addon[1]
+        elif addonSplit[0].upper() == 'KR' or addonSplit[0].upper() == 'KRL' or addonSplit[0].upper() == 'KRB' or addonSplit[0].upper() == 'KB' or addonSplit[0].upper() == 'KBL' or addonSplit[0].upper() == 'KRBL':
+            allServerAddonsSorted['Maps'][addon[0]] = addon[1]
+        elif addonSplit[0].upper() == 'KL':
+            allServerAddonsSorted['Scripts'][addon[0]] = addon[1]
+        else:
+            allServerAddonsSorted['Misc'][addon[0]] = addon[1]
     # Store current date and time
     curDateTime = datetime.now().strftime("%d/%m/%Y %H:%M:%S CET")
 
@@ -125,6 +159,7 @@ def appendServerInfo(ip='10.0.0.26', port='5029', contact=''):
     global allServerInfoStore
     global allServerFlags
     global serverCounter
+    global allServerAddons
 
     # try filling a server's info
     try:
@@ -140,6 +175,15 @@ def appendServerInfo(ip='10.0.0.26', port='5029', contact=''):
 
         # add this server's info to the list
         allServerInfoStore.append(serverInfo)
+
+        # add counters for addon usage       
+        for addon in serverInfo['addons']:
+            if addon['name'] in allServerAddons:
+                allServerAddons[addon['name']] += 1
+                if parsedArgs.verbose: print(f"{addon['name']} was present in addon counter, counter set to {allServerAddons[addon['name']]}")
+            else:
+                if parsedArgs.verbose: print(f"{addon['name']} does not exist yet in addon counter.")
+                allServerAddons[addon['name']] = 1
 
     # XD
     except:
@@ -172,14 +216,19 @@ def appendServerInfo(ip='10.0.0.26', port='5029', contact=''):
             try:
                 # DISABLE FIRST LINE WHILE DEBUGGING OR GET RATE LIMITED
                 serverWhois = requests.get('http://ipwhois.app/json/'+ip).json()
-                #serverWhois = {'country': None, 'country_code': None, 'country_flag': "https://srb2kart.aqua.fyi/images/picardybad.png"}
-                allServerFlags[ip] = [serverWhois['country'], serverWhois['country_code'], serverWhois['country_flag']] # TODO: could just pass the serverWhois block and use necessary info in the jinja template
+                #serverWhois = {'country': None, 'country_code': None, 'country_flag': "https://srb2kart.aqua.fyi/images/picardybad.png", 'region': GA}
+
+                # if we're talking freedom
+                if serverWhois['country'] == "United States":
+                    allServerFlags[ip] = [serverWhois['country'], serverWhois['country_code'], serverWhois['country_flag'], " "+us.states.lookup(serverWhois['region']).abbr] # TODO: could just pass the serverWhois block and use necessary info in the jinja template
+                else:
+                    allServerFlags[ip] = [serverWhois['country'], serverWhois['country_code'], serverWhois['country_flag'], "   "] # we include an empty string as the last thing because jinja is limited in string matching
             
             # if we can't reach them, fill the info with unknown stuff.
             # TODO: add a mechanic to retry connection after some time.
             except:
                 if parsedArgs.verbose: print(str("|{:<26}|{:<64}|").format(str(f" {ip}:{port}"), " Could not get WHOIS info, using dummy thicc info"))
-                allServerFlags[ip] = ['Unknown', 'XX', 'https://srb2kart.aqua.fyi/images/picardybad.png']
+                allServerFlags[ip] = ['Unknown', 'XX', 'https://srb2kart.aqua.fyi/images/picardybad.png', "XX"]
     
     # up the counter baybeee
     serverCounter += 1
@@ -211,11 +260,12 @@ print(r"""
  ######""")
 
 if parsedArgs.verbose == False:
-    print("NOTE: Verbose information disabled. Individual server checks won't be shown. Enable with -v as argument.\n")
+    print("NOTE: Verbose information disabled. Individual server checks won't be shown. Enable these with -v as launch argument.\n")
 
 # update servers ourself for a first time so we can display at least SOMETHING
 updateServers()
-
+#appendServerInfo()
+#print("Done")
 # start running the flask server
 # flask is being run as a development server like this. works fine for our purposes though
 app.run(host='0.0.0.0', port=parsedArgs.port)

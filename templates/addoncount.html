@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en_US">
+<head>
+    <meta charset="utf-8">
+    <meta content="Unofficial server browser for SRB2Kart servers" name="description">
+    <meta content="SRB2Kart" name="author">
+    <title>SRB2Kart Server Browser</title>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SRB2Kart Server Browser">
+    <meta property="og:description" content="Unofficial server browser for SRB2Kart servers">
+    <meta property="og:image" content="https://media.discordapp.net/attachments/275416357053399040/514214373187649559/kartlogo-wallpaper1080p.png">
+    <meta property="og:image:width" content="1920">
+    <meta property="og:image:height" content="1080">
+    <meta property="og:image:alt" content="SRB2Kart">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:text:title" content="SRB2Kart Server Browser">
+    <meta name="twitter:image" content="https://media.discordapp.net/attachments/275416357053399040/514214373187649559/kartlogo-wallpaper1080p.png">
+    <meta name="twitter:image:alt" content="SRB2Kart">
+    <meta name="twitter:card" content="summary">
+    <link href="{{ url_for('static', filename='stylesheets/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/ico" href="{{ url_for('static', filename='images/kartlogo.ico') }}">
+    <style>
+        body{
+            text-align: center;
+            font-display: Arial;
+        }
+
+        .addonContainer{
+            width: 45%;
+            height: 900px;
+            overflow: auto;
+            
+        }
+
+        .addonLister{
+            text-align: left;
+            word-wrap: break-word;
+            border-bottom-style: solid;
+            border-bottom-width: medium;
+            border-bottom: #a9c7c7;
+        }
+
+        .addonLister tbody {
+            border-left-width: 12px;
+            border-left-style: solid;
+            border-left-color: #222222;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+<!-- load external scripts-->
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>-->
+<!-- not used yet <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script> -->
+
+<div class="container">
+
+<!-- some random info -->
+<h2>SRB2Kart Addon Counter</h2>
+<p>This page shows how often a certain addon is used within all advertised SRB2Kart servers. <br>There are {{serverCounter}} servers advertised.</p>
+<p>Not much attention was given to the formatting of the page, it's in a very early stage currently.</p>
+<p>To refresh the data, refresh the page.<br />Data is updated in 30 second intervals.</p>
+<p>Last updated on <b>{{curDateTime}}</b></p>
+<p></p>
+<div style="display: flex;">
+    <div class="addonContainer">
+        <h2>Characters</h2>
+        <table class="addonLister">
+            <tr>
+                <th>Name</th>
+                <th>Count</th>
+            </tr>
+            {% for addon in allServerAddons['Characters'] %}
+            <tr>
+                <td>{{addon}}</td>
+                <td>{{allServerAddons['Characters'][addon]}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <p class="addonLister"></p>
+    </div>
+    <div class="addonContainer">
+        <h2>Maps</h2>
+        <table class="addonLister">
+            <tr>
+                <th>Name</th>
+                <th>Count</th>
+            </tr>
+            {% for addon in allServerAddons['Maps'] %}
+            <tr>
+                <td>{{addon}}</td>
+                <td>{{allServerAddons['Maps'][addon]}}</td>
+            </tr>
+            {% endfor %}
+        </table>    
+    </div>
+</div>
+<br/><br/>
+<div style="display: flex;">
+    <div class="addonContainer">
+        <h2>Scripts</h2>
+        <table class="addonLister">
+            <tr>
+                <th>Name</th>
+                <th>Count</th>
+            </tr>
+            {% for addon in allServerAddons['Scripts'] %}
+            <tr>
+                <td>{{addon}}</td>
+                <td>{{allServerAddons['Scripts'][addon]}}</td>
+            </tr>
+            {% endfor %}
+        </table>        
+    </div>
+    <div class="addonContainer">
+        <h2>Misc</h2>
+        <table class="addonLister">
+            <tr>
+                <th>Name</th>
+                <th>Count</th>
+            </tr>
+            {% for addon in allServerAddons['Misc'] %}
+            <tr>
+                <td>{{addon}}</td>
+                <td>{{allServerAddons['Misc'][addon]}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+</p>
+<small id="footer" style="padding-bottom: 8px; color: #ccc">Created by raphaelgoulart, modified by Aqua. Based on existing work by James R. and GoldenTails. 
+<img src="{{ url_for('static', filename='images/picardy.png') }}" alt="very cool emoji" style="width: 26px; height: 18px;"></small>
+</div>
+</body>
+</html>
