@@ -14,4 +14,4 @@ This program is based on Goulart's [SRB2Kart Web Server Browser](https://github.
 SRB2KB is essentially a rewrite of the PHP Web Server Browser.
 
 ## Usage
-You're free to use this application to host your own server browser. Would be cool if you would let us know whether this code was of any use to you.
+You're free to use this application to host your own server browser. Would be cool if you would let us know whether this code was of any use to you! :)
