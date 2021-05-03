@@ -107,7 +107,7 @@
                         <span id="drop_{{num}}" class="material-icons dropdown" data-open="0" style>arrow_drop_down</span>
                     </a>
                 </td>
-                <td>{{server['ip']}}:{{server['port']}}</td>
+                <td><a href="srb2kart://ip/{{server['ip']}}:{{server['port']}}">{{server['ip']}}:{{server['port']}}</a></td>
                 <td id="flag_{{num}}"><img src="{{allServerFlags[server['ip']][2]}}" alt="{{allServerFlags[server['ip']][0]}}" style="width: 24px; height: 18px;" />{{allServerFlags[server['ip']][3]}}</td>
                 <!--<td id="state_{{num}}"></td>-->
                 <td id="name_{{num}}">{{server['servername']|safe}}</td>
